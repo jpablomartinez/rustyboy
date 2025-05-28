@@ -1,6 +1,7 @@
 mod gameboy;
 mod memory_bus;
 mod cpu;
+mod constants;
 
 use gameboy::Gameboy;
 
@@ -10,7 +11,7 @@ fn main() {
     for i in 0..0x4000 {
         print!("{:02X} ", gameboy.rom.bank1[i]);
         if (i + 1) % 16 == 0 {
-            println!();
+            println!();            
         }
     }
 }

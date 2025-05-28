@@ -1,9 +1,12 @@
+use crate::cpu::flag::Flag;
+
 pub struct Register {
     a: u8,
     b: u8,
     c: u8,
     d: u8,
     e: u8,
+    f: Flag,
     h: u8,
     l: u8
 }
@@ -16,9 +19,22 @@ impl Register {
             c: 0x0,
             d: 0x0,
             e: 0x0,
+            f: Flag::new(),
             h: 0x0,
             l: 0x0
         }
-
     }
+    
+    pub fn get_a(&self) -> u8 {
+        self.a
+    }
+    
+    pub fn set_a(&mut self, a: u8) {
+        self.a = a;
+    }
+    
+    pub fn get_f_mut(&mut self) -> &mut Flag {
+        &mut self.f
+    }
+    
 }
