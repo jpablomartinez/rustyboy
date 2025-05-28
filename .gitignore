@@ -1,3 +1,5 @@
 /target
 /cpu_instrs
+/.vscode
+/.idea
 .DS_Store
