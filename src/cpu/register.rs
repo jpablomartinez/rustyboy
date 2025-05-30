@@ -28,6 +28,34 @@ impl Register {
     pub fn get_a(&self) -> u8 {
         self.a
     }
+
+    pub fn get_b(&self) -> u8 {
+        self.b
+    }
+
+    pub fn get_c(&self) -> u8 {
+        self.b
+    }
+
+    pub fn get_d(&self) -> u8 {
+        self.b
+    }
+
+    pub fn get_e(&self) -> u8 {
+        self.b
+    }
+
+    pub fn get_h(&self) -> u8 {
+        self.b
+    }
+
+    pub fn get_l(&self) -> u8 {
+        self.b
+    }
+
+    pub fn get_hl(&self) -> u16 {
+        ((self.h as u16) << 8) | (self.l as u16)
+    }
     
     pub fn set_a(&mut self, a: u8) {
         self.a = a;

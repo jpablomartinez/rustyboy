@@ -48,3 +48,19 @@ pub fn add_a_r8(registers: &mut Register, r8: u8) {
     //setting value in a = a + r8
     registers.set_a(r);
 }
+
+//(HL) Read H and L to get a 16-bit address
+//that address exits on memory RAM
+pub fn add_a_hl(registers: &mut Register){
+    let a: u8 = registers.get_a();
+    let hl: u16 = registers.get_hl();
+    //TODO: Read value from RAM
+    let value: u8 = 0x00;
+    let carry: u8 = if registers.get_f_mut().get_flag(C_FLAG) {1} else {0};
+    let r: u8 = a.wrapping_add(value).wrapping_add(carry);
+    let c: bool = (a as u16 + value as u16 + carry as u16) > 0xFF;
+    let h: bool = ((a & 0xF) + (value & 0xF) + carry) > 0xF;
+    registers.get_f_mut().set_flags(c,false,h,r == 0);
+    registers.set_a(r);
+}
+
