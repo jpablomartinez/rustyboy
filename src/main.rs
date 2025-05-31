@@ -2,6 +2,7 @@ mod gameboy;
 mod memory_bus;
 mod cpu;
 mod constants;
+mod error;
 
 use gameboy::Gameboy;
 
