@@ -4,7 +4,7 @@ use crate::memory_bus::rom::ROM;
 
 
 pub struct MemoryBus {
-    rom: ROM,
+    pub rom: ROM,
     w_ram: WRAM,
     v_ram: VRAM,
 }
