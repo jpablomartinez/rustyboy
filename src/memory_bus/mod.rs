@@ -1,3 +1,12 @@
 pub mod rom;
-mod ram;
+pub mod bus;
 pub mod memory_bus;
+mod io;
+mod w_ram;
+pub mod v_ram;
+pub mod h_ram;
+pub mod echo_ram;
+mod e_ram;
+mod oam;
+mod interrupt;
+mod not_usable;

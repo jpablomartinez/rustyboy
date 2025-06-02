@@ -1,4 +1,9 @@
 pub mod cpu;
 pub mod register;
-mod cpu_instruction;
-mod flag;
+pub mod cpu_instruction;
+pub mod flag;
+pub mod ld;
+pub mod alu;
+pub mod jp;
+pub mod cb;
+pub mod control;

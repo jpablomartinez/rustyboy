@@ -19,6 +19,5 @@ impl Gameboy {
             Ok(_) => println!("Success"),
             Err(e) => println!("Error: {}", e),
         }
-
     }
 }

@@ -25,6 +25,15 @@ impl ROM {
         }
         Ok(())        
     }
+    
+    pub fn read_byte(&self, addr: u16) -> u8 {
+        match addr { 
+            0x0000..=0x3FFF => self.bank0[addr as usize],
+            0x4000..=0x7FFF => self.bank1[addr as usize - 0x4000],
+            _ => 0
+        }
+    }
+    
 }
 
 //C3 20 C2 D6 05 30 FC 1F 30 00 CE 01 D0 C8 00 C9
