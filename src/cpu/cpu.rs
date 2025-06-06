@@ -1,10 +1,12 @@
+use crate::cpu::control::Control;
 use super::register::Register;
-use super::control::{Control};
+
 
 pub struct CPU {
     pc: u16,
     sp: u16,
-    registers: Register
+    registers: Register,
+    cycles: u64,
 }
 
 impl CPU {
@@ -12,11 +14,16 @@ impl CPU {
         CPU {
             pc: 0x00,
             sp: 0x00,
-            registers: Register::new()
+            registers: Register::new(),
+            cycles: 0,
         }
     }
+    
+    pub fn add_cycles(&mut self, c: u64){
+        self.cycles += c;
+    }
 
-    pub fn decode(opcode: u8) {
+    pub fn decode(&mut self, opcode: u8) {
         let x: u8 = (opcode & 0b11000000) >> 6; //instruction
         let y: u8 = (opcode & 0b00111000) >> 3; //op1
         let z: u8 = opcode & 0b00000111; //op2
@@ -24,7 +31,7 @@ impl CPU {
         dbg!(x,y,z);
 
         match(x,y,z){
-            (0, 0, 0) => Control.nop(), //0x00
+            (0, 0, 0) => Control::nop(self), //0x00
             (0, 0, 1) => todo!(), //0x01
             (0, 0, 2) => todo!(),
             (0, 0, 3) => todo!(),

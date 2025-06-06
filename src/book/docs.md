@@ -36,6 +36,8 @@ b = 0b0010 << 2 = 0b1000
 ### Cycles
 This is how many clock cycles (or machine cycles) the CPU takes to execute the instruction.
 
+- 1 cycle = 238 ns = (1/4194304) seg
+
 For LDH [n16], A, it takes 3 cycles.
 
 Each cycle corresponds to a fixed amount of time the CPU needs to process part of the instruction.
@@ -59,3 +61,5 @@ The Program Counter (PC) increments by the number of bytes in the instruction to
 So yes, after executing LDH [n8], A which is 2 bytes, PC increases by 2 (opcode + immediate byte).
 
 PC increment it’s based on instruction length (bytes)
+
+**After a instruction finish his work, then return the amount of cycles (in GB CPU) that take it to complete**
