@@ -32,8 +32,8 @@ impl CPU {
 
         match(x,y,z){
             (0, 0, 0) => Control::nop(self), //0x00
-            (0, 0, 1) => todo!(), //0x01
-            (0, 0, 2) => todo!(),
+            (0, 0, 1) => Control::ld_bc_n16(self), //0x01
+            (0, 0, 2) => Control::ld_bc_a(self),
             (0, 0, 3) => todo!(),
             (0, 0, 4) => todo!(),
             (0, 0, 5) => todo!(),
