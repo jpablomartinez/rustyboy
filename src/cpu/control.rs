@@ -66,10 +66,25 @@ impl Control {
     }
 
     pub fn rlca (cpu: &mut CPU){
+        let a: u8 = cpu.get_registers().get_a();
+        let msm: u8 = (a & 0x80) >> 7;
+        let r: u8 = (a << 1) | msm;
+        cpu.get_registers().set_a(r);
+        cpu.get_registers().get_f_mut().set_flags(msm == 1,false,false,false);
+        cpu.change_pc(cpu.get_pc() + 1);
         cpu.add_cycles(4);
     }
 
-    pub fn ld_a16_sp(cpu: &mut CPU){
+    pub fn ld_a16_sp(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let a_low_byte = memory_bus.read(cpu.get_pc() + 1);
+        let a_high_byte = memory_bus.read(cpu.get_pc() + 2);
+        //TODO: a16 == 0xFFFF check this if works
+        let a16: u16 = ((a_high_byte as u16) << 8) | (a_low_byte as u16);
+        let sp_lsb: u8 = (cpu.get_sp() & 0x00FF) as u8;
+        let sp_msb: u8 = (cpu.get_sp() >> 8) as u8;
+        memory_bus.write(a16, sp_lsb);
+        memory_bus.write(a16.wrapping_add(1), sp_msb);
+        cpu.change_pc(cpu.get_pc() + 3);
         cpu.add_cycles(20);
     }
 

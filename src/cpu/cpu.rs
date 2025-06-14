@@ -29,6 +29,8 @@ impl CPU {
         self.pc
     }
 
+    pub fn get_sp(&self) -> u16 { self.sp }
+    
     pub fn get_registers(&mut self) -> &mut Register {
         &mut self.registers
     }
@@ -57,7 +59,7 @@ impl CPU {
             (0, 0, 5) => Control::dec_b(self),
             (0, 0, 6) => Control::ld_b_n8(self, bus),
             (0, 0, 7) => Control::rlca(self),
-            (0, 1, 0) => Control::ld_a16_sp(self),
+            (0, 1, 0) => Control::ld_a16_sp(self, bus),
             (0, 1, 1) => Control::add_hl_bc(self),
             (0, 1, 2) => Control::ld_a_bc(self),
             (0, 1, 3) => Control::dec_bc(self),
