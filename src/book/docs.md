@@ -76,3 +76,18 @@ Para reconstruirlo:
 El byte alto se desplaza 8 bits (hi << 8)
 
 Luego se hace OR con el byte bajo (| lo) para combinar ambos
+
+```
+(B & 0x0F) -> this op get lower bits (bits from 0 to 3)
+```
+
+🧠 ¿Por qué interesa el nibble bajo?
+Porque el half-carry flag (H) se activa cuando hay un acarreo desde el bit 3 al bit 4 en una operación de suma.
+
+Los bits de un byte (8 bits) se numeran así:
+```
+Bit:     7 6 5 4 | 3 2 1 0
+Nibble:  ↑↑↑↑     ↑↑↑↑
+          Alto     Bajo
+```
+B & 0x0F = 0000 XXXX → extrae solo los bits 3 a 0.

@@ -55,7 +55,7 @@ impl CPU {
             (0, 0, 3) => Control::inc_bc(self),
             (0, 0, 4) => Control::inc_b(self),
             (0, 0, 5) => Control::dec_b(self),
-            (0, 0, 6) => Control::ld_b_n8(self),
+            (0, 0, 6) => Control::ld_b_n8(self, bus),
             (0, 0, 7) => Control::rlca(self),
             (0, 1, 0) => Control::ld_a16_sp(self),
             (0, 1, 1) => Control::add_hl_bc(self),

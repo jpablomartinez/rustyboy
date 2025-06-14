@@ -1,3 +1,4 @@
+use crate::constants::flags::C_FLAG;
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
 
@@ -27,18 +28,40 @@ impl Control {
     }
 
     pub fn inc_bc(cpu: &mut CPU){
+        let bc: u16 = cpu.get_registers().get_memory_addresses_bc();
+        let tmp: u16 = bc.wrapping_add(1);
+        cpu.get_registers().set_b((tmp >> 8) as u8);
+        cpu.get_registers().set_c((tmp & 0x00FF) as u8);
+        cpu.change_pc(cpu.get_pc() + 1);
         cpu.add_cycles(8);
     }
 
     pub fn inc_b(cpu: &mut CPU){
+        let b: u8 = cpu.get_registers().get_b();
+        let r: u8 = b.wrapping_add(1);
+        let h: bool = (b & 0x0F) + 1 > 0xF;
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(c,false, h,r == 0);
+        cpu.get_registers().set_b(r);
+        cpu.change_pc(cpu.get_pc() + 1);
         cpu.add_cycles(4);
     }
 
     pub fn dec_b(cpu: &mut CPU){
+        let b: u8 = cpu.get_registers().get_b();
+        let r: u8 = b.wrapping_sub(1);
+        let h: bool = (b & 0x0F) == 0x00;
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(c,true, h,r == 0);
+        cpu.get_registers().set_b(r);
+        cpu.change_pc(cpu.get_pc() + 1);
         cpu.add_cycles(4);
     }
 
-    pub fn ld_b_n8(cpu: &mut CPU){
+    pub fn ld_b_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let value: u8 = memory_bus.read(cpu.get_pc() + 1);
+        cpu.get_registers().set_b(value);
+        cpu.change_pc(cpu.get_pc() + 2);
         cpu.add_cycles(8);
     }
 
