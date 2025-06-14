@@ -1,17 +1,28 @@
 use crate::cpu::cpu::CPU;
+use crate::memory_bus::memory_bus::MemoryBus;
 
 pub struct Control;
 
 impl Control {
     pub fn nop (cpu: &mut CPU){
+        cpu.change_pc(cpu.get_pc() + 1);
         cpu.add_cycles(4);
     }
 
-    pub fn ld_bc_n16(cpu: &mut CPU){
+    pub fn ld_bc_n16(cpu: &mut CPU, memory_bus: &mut  MemoryBus) {
+        let low_byte = memory_bus.read(cpu.get_pc() + 1);
+        let high_byte = memory_bus.read(cpu.get_pc() + 2);
+        cpu.get_registers().set_b(high_byte);
+        cpu.get_registers().set_c(low_byte);
+        cpu.change_pc(cpu.get_pc() + 3);
         cpu.add_cycles(12);
     }
 
-    pub fn ld_bc_a(cpu: &mut CPU){
+    pub fn ld_bc_a(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let a: u8 = cpu.get_registers().get_a();
+        let address: u16 = cpu.get_registers().get_memory_addresses_bc();
+        memory_bus.write(address, a);
+        cpu.change_pc(cpu.get_pc() + 1);
         cpu.add_cycles(8);
     }
 

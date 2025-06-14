@@ -57,12 +57,26 @@ impl Register {
         ((self.h as u16) << 8) | (self.l as u16)
     }
     
-    pub fn set_a(&mut self, a: u8) {
-        self.a = a;
-    }
-    
     pub fn get_f_mut(&mut self) -> &mut Flag {
         &mut self.f
     }
+    
+    pub fn get_memory_addresses_bc(&self) -> u16 {
+        (self.b as u16) << 8 | self.c as u16
+    }
+
+    pub fn set_a(&mut self, value: u8) {
+        self.a = value;
+    }
+
+    pub fn set_b(&mut self, value: u8) {
+        self.b = value;
+    }
+
+    pub fn set_c(&mut self, value: u8) {
+        self.c = value;
+    }
+    
+    
     
 }

@@ -1,4 +1,3 @@
-use crate::memory_bus::rom::ROM;
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
 
@@ -19,5 +18,8 @@ impl Gameboy {
             Ok(_) => println!("Success"),
             Err(e) => println!("Error: {}", e),
         }
+    }
+    pub fn step(&mut self) {
+        self.cpu.step(&mut self.memory_bus);
     }
 }

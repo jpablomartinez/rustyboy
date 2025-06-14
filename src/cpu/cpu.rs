@@ -1,4 +1,5 @@
 use crate::cpu::control::Control;
+use crate::memory_bus::memory_bus::MemoryBus;
 use super::register::Register;
 
 
@@ -18,12 +19,29 @@ impl CPU {
             cycles: 0,
         }
     }
-    
+
+    pub fn step(&mut self, bus: &mut MemoryBus) {
+        let opcode = bus.read(self.pc);
+        self.decode(opcode, bus);
+    }
+
+    pub fn get_pc(&self) -> u16 {
+        self.pc
+    }
+
+    pub fn get_registers(&mut self) -> &mut Register {
+        &mut self.registers
+    }
+
+    pub fn change_pc(&mut self, new_pc: u16) {
+        self.pc = new_pc;
+    }
+
     pub fn add_cycles(&mut self, c: u64){
         self.cycles += c;
     }
 
-    pub fn decode(&mut self, opcode: u8) {
+    pub fn decode(&mut self, opcode: u8, bus: &mut MemoryBus) {
         let x: u8 = (opcode & 0b11000000) >> 6; //instruction
         let y: u8 = (opcode & 0b00111000) >> 3; //op1
         let z: u8 = opcode & 0b00000111; //op2
@@ -32,8 +50,8 @@ impl CPU {
 
         match(x,y,z){
             (0, 0, 0) => Control::nop(self), //0x00
-            (0, 0, 1) => Control::ld_bc_n16(self), //0x01
-            (0, 0, 2) => Control::ld_bc_a(self),
+            (0, 0, 1) => Control::ld_bc_n16(self, bus), //0x01
+            (0, 0, 2) => Control::ld_bc_a(self, bus),
             (0, 0, 3) => Control::inc_bc(self),
             (0, 0, 4) => Control::inc_b(self),
             (0, 0, 5) => Control::dec_b(self),

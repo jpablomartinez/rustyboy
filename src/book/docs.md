@@ -63,3 +63,16 @@ So yes, after executing LDH [n8], A which is 2 bytes, PC increases by 2 (opcode 
 PC increment it’s based on instruction length (bytes)
 
 **After a instruction finish his work, then return the amount of cycles (in GB CPU) that take it to complete**
+
+
+En sistemas little endian como el Game Boy, los valores de 16 bits se almacenan en orden:
+
+primero el byte bajo (lo)
+
+luego el byte alto (hi)
+
+Para reconstruirlo:
+
+El byte alto se desplaza 8 bits (hi << 8)
+
+Luego se hace OR con el byte bajo (| lo) para combinar ambos
