@@ -42,6 +42,11 @@ impl CPU {
     pub fn add_cycles(&mut self, c: u64){
         self.cycles += c;
     }
+    
+    pub fn update_pc_and_cycles(&mut self, pc: u16, cycles: u64) {
+        self.pc = pc;
+        self.cycles += cycles;
+    }
 
     pub fn decode(&mut self, opcode: u8, bus: &mut MemoryBus) {
         let x: u8 = (opcode & 0b11000000) >> 6; //instruction

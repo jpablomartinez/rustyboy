@@ -74,4 +74,11 @@ impl Flag {
         self.set_flag(z, Z_FLAG);
     }
     
+    /*pub fn set_inc_result(&mut self, original: u8, result: u8) {
+        let zero = result == 0;
+        let half_carry = (original & 0x0F) + 1 > 0x0F;
+        let carry = self.get_flag(C_FLAG);
+        self.set_flags(carry, false, half_carry, zero);
+    }*/
+    
 }
