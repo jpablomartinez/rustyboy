@@ -96,8 +96,11 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
-    pub fn ld_a_bc(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_a_bc(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let bc: u16 = cpu.get_registers().get_bc();
+        let value: u8 = memory_bus.read(bc);
+        cpu.get_registers().set_a(value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn dec_bc(cpu: &mut CPU){

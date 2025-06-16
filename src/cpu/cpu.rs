@@ -66,7 +66,7 @@ impl CPU {
             (0, 0, 7) => Control::rlca(self),
             (0, 1, 0) => Control::ld_a16_sp(self, bus),
             (0, 1, 1) => Control::add_hl_bc(self),
-            (0, 1, 2) => Control::ld_a_bc(self),
+            (0, 1, 2) => Control::ld_a_bc(self, bus),
             (0, 1, 3) => Control::dec_bc(self),
             (0, 1, 4) => Control::inc_c(self),
             (0, 1, 5) => Control::dec_c(self),
