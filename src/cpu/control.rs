@@ -1,8 +1,8 @@
 use std::ptr::write_volatile;
-use crate::constants::flags::C_FLAG;
+use crate::constants::flags::{C_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
-use crate::utils::byte_utils::{format_address_u16, get_lsb_u16, get_msb_u16};
+use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_msb_u16};
 
 pub struct Control;
 
@@ -21,13 +21,13 @@ impl Control {
 
     pub fn ld_bc_a(cpu: &mut CPU, memory_bus: &mut MemoryBus){
         let a: u8 = cpu.get_registers().get_a();
-        let address: u16 = cpu.get_registers().get_memory_addresses_bc();
+        let address: u16 = cpu.get_registers().get_bc();
         memory_bus.write(address, a);
         cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_bc(cpu: &mut CPU){
-        let bc: u16 = cpu.get_registers().get_memory_addresses_bc();
+        let bc: u16 = cpu.get_registers().get_bc();
         let tmp: u16 = bc.wrapping_add(1);
         cpu.get_registers().set_b(get_msb_u16(tmp));
         cpu.get_registers().set_c(get_lsb_u16(tmp));
@@ -73,7 +73,7 @@ impl Control {
         let a_low_byte = memory_bus.read(cpu.get_pc() + 1);
         let a_high_byte = memory_bus.read(cpu.get_pc() + 2);
         //TODO: a16 == 0xFFFF check this if works
-        let a16: u16 = format_address_u16(a_high_byte, a_low_byte);
+        let a16: u16 = format_u16(a_high_byte, a_low_byte);
         let sp_lsb: u8 =  get_lsb_u16(cpu.get_sp());
         let sp_msb: u8 = get_msb_u16(cpu.get_sp());
         memory_bus.write(a16, sp_lsb);
@@ -82,7 +82,18 @@ impl Control {
     }
 
     pub fn add_hl_bc(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let bc: u16 = cpu.get_registers().get_bc();
+        let hl: u16 = cpu.get_registers().get_hl();
+        let r: u16 = bc.wrapping_add(hl);
+        cpu.get_registers().set_hl(r);
+
+        let h: bool = ((hl & 0x0FFF) + (bc & 0x0FFF)) > 0x0FFF;
+        let c: bool = (hl as u32 + bc as u32) > 0xFFFF;
+        
+        //Z flag is not affected by ADD HL, xx — preserved explicitly
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(c,false,h,z);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn ld_a_bc(cpu: &mut CPU){

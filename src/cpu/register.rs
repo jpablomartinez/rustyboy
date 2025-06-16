@@ -1,4 +1,5 @@
 use crate::cpu::flag::Flag;
+use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_msb_u16};
 
 pub struct Register {
     a: u8,
@@ -54,15 +55,15 @@ impl Register {
     }
 
     pub fn get_hl(&self) -> u16 {
-        ((self.h as u16) << 8) | (self.l as u16)
+        format_u16(self.h, self.l)
     }
     
     pub fn get_f_mut(&mut self) -> &mut Flag {
         &mut self.f
     }
     
-    pub fn get_memory_addresses_bc(&self) -> u16 {
-        (self.b as u16) << 8 | self.c as u16
+    pub fn get_bc(&self) -> u16 {
+        format_u16(self.b, self.c)
     }
 
     pub fn set_a(&mut self, value: u8) {
@@ -75,6 +76,29 @@ impl Register {
 
     pub fn set_c(&mut self, value: u8) {
         self.c = value;
+    }
+    
+    pub fn set_d(&mut self, value: u8) {
+        self.d = value;
+    }
+
+    pub fn set_e(&mut self, value: u8) {
+        self.e = value;
+    }
+
+    pub fn set_h(&mut self, value: u8) {
+        self.h = value;
+    }
+
+    pub fn set_l(&mut self, value: u8) {
+        self.l = value;
+    }
+    
+    pub fn set_hl(&mut self, value: u16) {
+        let high: u8 = get_msb_u16(value);
+        let low: u8 = get_lsb_u16(value);
+        self.h = high;
+        self.l = low;
     }
     
     

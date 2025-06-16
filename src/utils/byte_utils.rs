@@ -30,6 +30,6 @@ pub fn get_msb_u16(value: u16) -> u8{
 /// A `u16` value where:
 /// - The upper 8 bits come from the `high` parameter.
 /// - The lower 8 bits come from the `low` parameter.
-pub fn format_address_u16(high: u8, low: u8) -> u16 {
+pub fn format_u16(high: u8, low: u8) -> u16 {
     ((high as u16) << 8) | (low as u16)
 }
