@@ -101,6 +101,13 @@ impl Register {
         self.l = low;
     }
     
+    pub fn set_bc(&mut self, value: u16) {
+        let high: u8 = get_msb_u16(value);
+        let low: u8 = get_lsb_u16(value);
+        self.b = high;
+        self.c = low;
+    }
+    
     
     
 }

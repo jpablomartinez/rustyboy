@@ -104,7 +104,10 @@ impl Control {
     }
 
     pub fn dec_bc(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let bc: u16 = cpu.get_registers().get_bc();
+        let r: u16 = bc.wrapping_sub(1);
+        cpu.get_registers().set_bc(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_c(cpu: &mut CPU){
