@@ -38,3 +38,7 @@ pub fn format_u16(high: u8, low: u8) -> u16 {
 pub fn get_lsb_u8(value: u8) -> u8{
     value & 0x01
 }
+
+pub fn get_msb_u8(value: u8) -> u8{
+    (value & 0x80) >> 7
+}

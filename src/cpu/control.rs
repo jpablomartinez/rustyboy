@@ -1,8 +1,8 @@
 use std::ptr::write_volatile;
-use crate::constants::flags::{C_FLAG, Z_FLAG};
+use crate::constants::flags::{C_FLAG, H_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
-use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_lsb_u8, get_msb_u16};
+use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
 
 pub struct Control;
 
@@ -200,7 +200,14 @@ impl Control {
     }
 
     pub fn rla (cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let c: u8 = if cpu.get_registers().get_f_mut().get_flag(C_FLAG) { 1 }  else { 0 } ;
+        let msb: u8 = get_msb_u8(cpu.get_registers().get_a());
+        let r: u8 = (a << 1) | c; //a << 1 rotate to left
+        cpu.get_registers().set_a(r);
+        let new_carry: bool = msb == 1;
+        cpu.get_registers().get_f_mut().set_flags(new_carry,false, false,false);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn jr_e8(cpu: &mut CPU){
