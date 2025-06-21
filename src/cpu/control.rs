@@ -1,5 +1,5 @@
 use std::ptr::write_volatile;
-use crate::constants::flags::{C_FLAG, H_FLAG, Z_FLAG};
+use crate::constants::flags::{C_FLAG, H_FLAG, N_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
 use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
@@ -347,7 +347,30 @@ impl Control {
     }
 
     pub fn daa(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let n: bool = cpu.get_registers().get_f_mut().get_flag(N_FLAG);
+        let half_carry = cpu.get_registers().get_f().get_flag(H_FLAG);
+        let mut carry = cpu.get_registers().get_f().get_flag(C_FLAG);
+        let mut r: u8 = a;
+        if(!n) {
+            if carry || a > 0x99 {
+                r = r.wrapping_add(0x60);
+                carry = true;
+            }
+            if half_carry || (a & 0x0F) > 0x09 {
+                r = r.wrapping_add(0x06);
+            }
+        } else {
+            if carry {
+                r = r.wrapping_sub(0x60);
+            }
+            if half_carry {
+                r = r.wrapping_sub(0x06);
+            }
+        }
+        cpu.get_registers().set_a(r);
+        cpu.get_registers().get_f_mut().set_flags(carry, n,false, r == 0);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn jr_z_n8(cpu: &mut CPU){}
