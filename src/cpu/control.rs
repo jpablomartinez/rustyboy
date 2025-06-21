@@ -210,46 +210,106 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn jr_e8(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn jr_e8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let pc: i16 = cpu.get_pc() as i16;
+        let offset_addr: u16 = cpu.get_pc().wrapping_add(1);
+        let offset: i8 = memory_bus.read(offset_addr) as i8;
+        let new_pc: u16 = pc.wrapping_add(2).wrapping_add(offset as i16) as u16;
+        cpu.update_pc_and_cycles(new_pc, 12);
     }
 
     pub fn add_hl_de(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let de: u16 = cpu.get_registers().get_de();
+        let hl: u16 = cpu.get_registers().get_hl();
+        let r: u16 = de.wrapping_add(hl);
+        cpu.get_registers().set_hl(r);
+
+        let h: bool = ((hl & 0x0FFF) + (de & 0x0FFF)) > 0x0FFF;
+        let c: bool = (hl as u32 + de as u32) > 0xFFFF;
+
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(c,false,h,z);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
-    pub fn ld_a_de(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_a_de(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let de: u16 = cpu.get_registers().get_de();
+        let value: u8 = memory_bus.read(de);
+        cpu.get_registers().set_a(value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn dec_de(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let de: u16 = cpu.get_registers().get_de();
+        let r: u16 = de.wrapping_sub(1);
+        cpu.get_registers().set_de(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_e(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let e: u8 = cpu.get_registers().get_e();
+        let r: u8 = e.wrapping_add(1);
+        let h: bool = (e & 0x0F) + 1 > 0xF;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,false, h,r == 0);
+        cpu.get_registers().set_e(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn dec_e(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let e: u8 = cpu.get_registers().get_e();
+        let r: u8 = e.wrapping_sub(1);
+        let h: bool = (e & 0x0F) == 0x00;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,true, h,r == 0);
+        cpu.get_registers().set_e(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn ld_e_n8(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_e_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let value: u8 = memory_bus.read(cpu.get_pc() + 1);
+        cpu.get_registers().set_e(value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 8);
     }
 
     pub fn rra(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let lsb: u8 = get_lsb_u8(a);
+        let old_carry: u8 = if cpu.get_registers().get_f_mut().get_flag(C_FLAG) { 1 }  else { 0 } ;
+        let new_carry: bool = lsb == 1;
+        let r: u8 = (a >> 1) | (old_carry << 7);
+        cpu.get_registers().set_a(r);
+        cpu.get_registers().get_f_mut().set_flags(new_carry,false, false,false);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn jr_nz_e8(cpu: &mut CPU){}
-
-    pub fn ld_hl_n16(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn jr_nz_e8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let z_flag = cpu.get_registers().get_f().get_flag(Z_FLAG);
+        if(z_flag){
+            cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(2), 8);
+        } else {
+            let pc: i16 = cpu.get_pc() as i16;
+            let offset_addr: u16 = cpu.get_pc().wrapping_add(1);
+            let offset: i8 = memory_bus.read(offset_addr) as i8;
+            let new_pc: u16 = pc.wrapping_add(offset as i16) as u16;
+            cpu.update_pc_and_cycles(new_pc, 12);
+        }
     }
 
-    pub fn ld_hl_plus_a(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_hl_n16(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let low_byte = memory_bus.read(cpu.get_pc() + 1);
+        let high_byte = memory_bus.read(cpu.get_pc() + 2);
+        cpu.get_registers().set_hl(format_u16(high_byte, low_byte));
+        cpu.update_pc_and_cycles(cpu.get_pc() + 3, 12);
+    }
+
+    pub fn ld_hl_plus_a(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let a: u8 = cpu.get_registers().get_a();
+        let hl: u16 = cpu.get_registers().get_hl();
+        memory_bus.write(hl, a);
+        let new_hl = hl.wrapping_add(1);
+        cpu.get_registers().set_hl(new_hl);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_hl(cpu: &mut CPU){

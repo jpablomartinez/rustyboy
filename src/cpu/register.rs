@@ -62,6 +62,10 @@ impl Register {
         &mut self.f
     }
     
+    pub fn get_f(&self) -> &Flag {
+        &self.f
+    }   
+    
     pub fn get_bc(&self) -> u16 {
         format_u16(self.b, self.c)
     }
@@ -110,6 +114,13 @@ impl Register {
         let low: u8 = get_lsb_u16(value);
         self.b = high;
         self.c = low;
+    }
+
+    pub fn set_de(&mut self, value: u16) {
+        let high: u8 = get_msb_u16(value);
+        let low: u8 = get_lsb_u16(value);
+        self.d = high;
+        self.e = low;
     }
     
     
