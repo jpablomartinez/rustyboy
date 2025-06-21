@@ -313,19 +313,37 @@ impl Control {
     }
 
     pub fn inc_hl(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let hl: u16 = cpu.get_registers().get_hl();
+        let r: u16 = hl.wrapping_add(1);
+        cpu.get_registers().set_hl(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_h(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let h: u8 = cpu.get_registers().get_h();
+        let r: u8 = h.wrapping_add(1);
+        let half_carry: bool = (h & 0x0F) + 1 > 0xF;
+        let carry: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().set_h(r);
+        cpu.get_registers().get_f_mut().set_flags(carry,false, half_carry,r == 0);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn dec_h(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let h: u8 = cpu.get_registers().get_e();
+        let r: u8 = h.wrapping_sub(1);
+        let half_carry: bool = (h & 0x0F) == 0x00;
+        let carry: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(carry,true, half_carry,r == 0);
+        cpu.get_registers().set_h(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn ld_h_n8(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_h_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let n8: u16 = cpu.get_pc() + 1;
+            let value: u8 = memory_bus.read(n8);
+        cpu.get_registers().set_h(value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 8);
     }
 
     pub fn daa(cpu: &mut CPU){
