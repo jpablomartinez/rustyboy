@@ -98,7 +98,7 @@ impl CPU {
             
             (0, 4, 0) => Control::jr_nz_e8(self, bus),
             (0, 4, 1) => Control::ld_hl_n16(self, bus),
-            (0, 4, 2) => Control::ld_hl_plus_a(self),
+            (0, 4, 2) => Control::ld_hl_plus_a(self, bus),
             (0, 4, 3) => Control::inc_hl(self),
             (0, 4, 4) => Control::inc_h(self),
             (0, 4, 5) => Control::dec_h(self),
