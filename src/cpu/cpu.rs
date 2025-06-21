@@ -8,6 +8,7 @@ pub struct CPU {
     sp: u16,
     registers: Register,
     cycles: u64,
+    is_running: bool,
 }
 
 impl CPU {
@@ -17,12 +18,17 @@ impl CPU {
             sp: 0x00,
             registers: Register::new(),
             cycles: 0,
+            is_running: true
         }
     }
 
     pub fn step(&mut self, bus: &mut MemoryBus) {
         let opcode = bus.read(self.pc);
         self.decode(opcode, bus);
+    }
+
+    pub fn set_running(&mut self, is_running: bool) {
+        self.is_running = is_running;
     }
 
     pub fn get_pc(&self) -> u16 {
@@ -70,16 +76,16 @@ impl CPU {
             (0, 1, 3) => Control::dec_bc(self),
             (0, 1, 4) => Control::inc_c(self),
             (0, 1, 5) => Control::dec_c(self),
-            (0, 1, 6) => Control::ld_c_n8(self),
+            (0, 1, 6) => Control::ld_c_n8(self, bus),
             (0, 1, 7) => Control::rrca(self),
             
             (0, 2, 0) => Control::stop(self),
-            (0, 2, 1) => Control::ld_de_n16(self),
-            (0, 2, 2) => Control::ld_de_a(self),
+            (0, 2, 1) => Control::ld_de_n16(self, bus),
+            (0, 2, 2) => Control::ld_de_a(self, bus),
             (0, 2, 3) => Control::inc_de(self),
             (0, 2, 4) => Control::inc_d(self),
             (0, 2, 5) => Control::dec_d(self),
-            (0, 2, 6) => Control::ld_d_n8(self),
+            (0, 2, 6) => Control::ld_d_n8(self, bus),
             (0, 2, 7) => Control::rla(self),
             (0, 3, 0) => Control::jr_e8(self),
             (0, 3, 1) => Control::add_hl_de(self),

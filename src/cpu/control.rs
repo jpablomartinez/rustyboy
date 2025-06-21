@@ -2,7 +2,7 @@ use std::ptr::write_volatile;
 use crate::constants::flags::{C_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
-use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_msb_u16};
+use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_lsb_u8, get_msb_u16};
 
 pub struct Control;
 
@@ -111,47 +111,92 @@ impl Control {
     }
 
     pub fn inc_c(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let c: u8 = cpu.get_registers().get_c();
+        let r: u8 = c.wrapping_add(1);
+        let h: bool = (c & 0x0F) + 1 > 0xF;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,false, h,r == 0);
+        cpu.get_registers().set_c(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn dec_c(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let c: u8 = cpu.get_registers().get_c();
+        let r: u8 = c.wrapping_sub(1);
+        let h: bool = (c & 0x0F) == 0x00;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,true, h,r == 0);
+        cpu.get_registers().set_c(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn ld_c_n8(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_c_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let value: u8 = memory_bus.read(cpu.get_pc() + 1);
+        cpu.get_registers().set_c(value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 8);
     }
 
     pub fn rrca(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let lsb: u8 = get_lsb_u8(a);
+        let r: u8 = (a >> 1) | (lsb << 7);
+        cpu.get_registers().set_a(r);
+        cpu.get_registers().get_f_mut().set_flags(lsb == 1,false,false,false);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn stop(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        cpu.set_running(false);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 4);
     }
 
-    pub fn ld_de_n16(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn ld_de_n16(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let low_byte = memory_bus.read(cpu.get_pc() + 1);
+        let high_byte = memory_bus.read(cpu.get_pc() + 2);
+        cpu.get_registers().set_d(high_byte);
+        cpu.get_registers().set_e(low_byte);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 3, 12);
     }
 
-    pub fn ld_de_a(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_de_a(cpu: &mut CPU, memory_bus:&mut MemoryBus){
+        let a: u8 = cpu.get_registers().get_a();
+        let address: u16 = cpu.get_registers().get_de();
+        memory_bus.write(address, a);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_de(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let de: u16 = cpu.get_registers().get_de();
+        let tmp: u16 = de.wrapping_add(1);
+        cpu.get_registers().set_d(get_msb_u16(tmp));
+        cpu.get_registers().set_e(get_lsb_u16(tmp));
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_d(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let d: u8 = cpu.get_registers().get_d();
+        let r: u8 = d.wrapping_add(1);
+        let h: bool = (d & 0x0F) + 1 > 0xF;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,false, h,r == 0);
+        cpu.get_registers().set_d(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn dec_d(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let d: u8 = cpu.get_registers().get_d();
+        let r: u8 = d.wrapping_sub(1);
+        let h: bool = (d & 0x0F) == 0x00;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,true, h,r == 0);
+        cpu.get_registers().set_d(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn ld_d_n8(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_d_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let value: u8 = memory_bus.read(cpu.get_pc() + 1);
+        cpu.get_registers().set_d(value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 8);
     }
 
     pub fn rla (cpu: &mut CPU){
