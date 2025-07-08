@@ -373,10 +373,30 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn jr_z_n8(cpu: &mut CPU){}
+    pub fn jr_z_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let pc: u16 = cpu.get_pc();
+        let offset_addr: u16 = cpu.get_pc().wrapping_add(1);
+        let offset: i8 = memory_bus.read(offset_addr) as i8;
+        let z_flag = cpu.get_registers().get_f().get_flag(Z_FLAG);
+        if z_flag{
+            let new_pc: u16 = (pc as i16).wrapping_add(2).wrapping_add(offset as i16) as u16;
+            cpu.update_pc_and_cycles(new_pc, 12);
+        } else {
+            cpu.update_pc_and_cycles(pc.wrapping_add(2) as u16, 8);
+        }
+    }
 
     pub fn add_hl_hl(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let hl: u16 = cpu.get_registers().get_hl();
+        let r: u16 = hl.wrapping_add(hl);
+        cpu.get_registers().set_hl(r);
+        
+        let h: bool =   ((hl & 0x0FFF) + (hl & 0x0FFF)) > 0x0FFF;
+        let c: bool = (hl as u32 + hl as u32) > 0xFFFF;
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        
+        cpu.get_registers().get_f_mut().set_flags(c,false,h,z);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
     pub fn ld_a_hl_plus(cpu: &mut CPU){
