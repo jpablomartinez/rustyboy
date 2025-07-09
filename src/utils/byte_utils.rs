@@ -42,3 +42,7 @@ pub fn get_lsb_u8(value: u8) -> u8{
 pub fn get_msb_u8(value: u8) -> u8{
     (value & 0x80) >> 7
 }
+
+pub fn get_half_carry_inc(value: u8) -> bool{
+    (value & 0x0F) + 1 > 0xF
+}

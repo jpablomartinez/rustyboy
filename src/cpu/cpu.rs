@@ -106,7 +106,7 @@ impl CPU {
             (0, 4, 7) => Control::daa(self),
             (0, 5, 0) => Control::jr_z_n8(self, bus),
             (0, 5, 1) => Control::add_hl_hl(self),
-            (0, 5, 2) => Control::ld_a_hl_plus(self),
+            (0, 5, 2) => Control::ld_a_hl_plus(self, bus),
             (0, 5, 3) => Control::dec_hl(self),
             (0, 5, 4) => Control::inc_l(self),
             (0, 5, 5) => Control::dec_l(self),

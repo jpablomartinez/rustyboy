@@ -2,7 +2,7 @@ use std::ptr::write_volatile;
 use crate::constants::flags::{C_FLAG, H_FLAG, N_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
-use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
+use crate::utils::byte_utils::{format_u16, get_half_carry_inc, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
 
 pub struct Control;
 
@@ -399,24 +399,46 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
-    pub fn ld_a_hl_plus(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_a_hl_plus(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let hl: u16 = cpu.get_registers().get_hl();
+        let value: u8 = memory_bus.read(hl);
+        cpu.get_registers().set_a(value);
+        let new_hl = hl.wrapping_add(1);
+        cpu.get_registers().set_hl(new_hl);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn dec_hl(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let hl: u16 = cpu.get_registers().get_hl();
+        let r: u16 = hl.wrapping_sub(1);
+        cpu.get_registers().set_hl(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
     }
 
     pub fn inc_l(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let l: u8 = cpu.get_registers().get_l();
+        let r: u8 = l.wrapping_add(1);
+        let h: bool = get_half_carry_inc(l);
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,false, h,r == 0);
+        cpu.get_registers().set_l(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn dec_l(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let l: u8 = cpu.get_registers().get_l();
+        let r: u8 = l.wrapping_sub(1);
+        let h: bool = (l & 0x0F) == 0x00;
+        let _c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(_c,true, h,r == 0);
+        cpu.get_registers().set_l(r);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
     pub fn ld_l_n8(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        
+        
+        
     }
 
     pub fn cpl(cpu: &mut CPU){
