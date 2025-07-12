@@ -435,22 +435,41 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn ld_l_n8(cpu: &mut CPU){
-        
-        
-        
+    pub fn ld_l_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let offset_addr: u16 = cpu.get_pc().wrapping_add(1);
+        let offset: u8 = memory_bus.read(offset_addr) as u8;
+        cpu.get_registers().set_l(offset);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 8);
     }
 
     pub fn cpl(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let r: u8 = !a;
+        cpu.get_registers().set_a(r);
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(c,true,true,z);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
     }
 
-    pub fn jr_nc_e8(cpu: &mut CPU){
-
+    pub fn jr_nc_e8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let offset_addr: u16 = cpu.get_pc().wrapping_add(1);
+        let offset: i8 = memory_bus.read(offset_addr) as i8;
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        if !c {
+            let new_pc: u16 = (cpu.get_pc() as i16).wrapping_add(2).wrapping_add(offset as i16) as u16;
+            cpu.update_pc_and_cycles(new_pc, 12);
+        } else {
+            cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(2), 8);
+        }
     }
 
-    pub fn ld_sp_n16(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn ld_sp_n16(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let low_byte = memory_bus.read(  cpu.get_pc().wrapping_add(1));
+        let high_byte = memory_bus.read( cpu.get_pc().wrapping_add(2));
+        let hl: u16 = format_u16(high_byte,low_byte);
+        cpu.set_sp(hl);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(3), 12);
     }
 
     pub fn ld_hl_minus_a(cpu: &mut CPU){

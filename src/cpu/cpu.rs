@@ -44,6 +44,10 @@ impl CPU {
     pub fn change_pc(&mut self, new_pc: u16) {
         self.pc = new_pc;
     }
+    
+    pub fn set_sp(&mut self, new_sp: u16) {
+        self.sp = new_sp;
+    }
 
     pub fn add_cycles(&mut self, c: u64){
         self.cycles += c;
@@ -110,11 +114,11 @@ impl CPU {
             (0, 5, 3) => Control::dec_hl(self),
             (0, 5, 4) => Control::inc_l(self),
             (0, 5, 5) => Control::dec_l(self),
-            (0, 5, 6) => Control::ld_l_n8(self),
+            (0, 5, 6) => Control::ld_l_n8(self, bus),
             (0, 5, 7) => Control::cpl(self),
             
-            (0, 6, 0) => Control::jr_nc_e8(self),
-            (0, 6, 1) => Control::ld_sp_n16(self),
+            (0, 6, 0) => Control::jr_nc_e8(self, bus),
+            (0, 6, 1) => Control::ld_sp_n16(self, bus),
             (0, 6, 2) => Control::ld_hl_minus_a(self),
             (0, 6, 3) => Control::inc_sp(self),
             (0, 6, 4) => Control::inc_hl_(self),
