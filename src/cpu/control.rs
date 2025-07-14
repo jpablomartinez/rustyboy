@@ -472,24 +472,51 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(3), 12);
     }
 
-    pub fn ld_hl_minus_a(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_hl_minus_a(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let a: u8 = cpu.get_registers().get_a();
+        let hl: u16 = cpu.get_registers().get_hl();
+        memory_bus.write(hl, a);
+        let new_hl = hl.wrapping_sub(1);
+        cpu.get_registers().set_hl(new_hl);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
     pub fn inc_sp(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let sp: u16 = cpu.get_sp();
+        let r: u16 = sp.wrapping_add(1);
+        cpu.set_sp(r);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
-    pub fn inc_hl_(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn inc_hl_(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let address: u16 = cpu.get_registers().get_hl();
+        let register: u8 = memory_bus.read(address);
+        let r: u8 = register.wrapping_add(1);
+        memory_bus.write(address, r);
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        let h: bool = get_half_carry_inc(register);
+        cpu.get_registers().get_f_mut().set_flags(c,false, h,r == 0);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 12);
     }
 
-    pub fn dec_hl_(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn dec_hl_(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let address: u16 = cpu.get_registers().get_hl();
+        let register: u8 = memory_bus.read(address);
+        let r: u8 = register.wrapping_sub(1);
+        memory_bus.write(address, r);
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        // Half-carry occurs if low-nibble underflows when subtracting 1
+        let h: bool = (register & 0x0F) == 0x00;
+        cpu.get_registers().get_f_mut().set_flags(c,true, h,r == 0);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 12);
     }
 
-    pub fn ld_hl_n8(cpu: &mut CPU){
-        cpu.add_cycles(12);
+    pub fn ld_hl_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let offset_address: u16 = cpu.get_pc().wrapping_add(1);
+        let register: u8 = memory_bus.read(offset_address);
+        let hl: u16 = cpu.get_registers().get_hl();
+        memory_bus.write(hl, register);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 12);
     }
 
     pub fn scf(cpu: &mut CPU){
