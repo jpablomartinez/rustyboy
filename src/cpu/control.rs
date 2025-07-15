@@ -2,7 +2,7 @@ use std::ptr::write_volatile;
 use crate::constants::flags::{C_FLAG, H_FLAG, N_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
-use crate::utils::byte_utils::{format_u16, get_half_carry_inc, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
+use crate::utils::byte_utils::{format_u16, get_carry_inc_16b, get_half_carry_inc, get_half_carry_inc_16b, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
 
 pub struct Control;
 
@@ -496,7 +496,7 @@ impl Control {
         let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
         let h: bool = get_half_carry_inc(register);
         cpu.get_registers().get_f_mut().set_flags(c,false, h,r == 0);
-        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 12);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 12);
     }
 
     pub fn dec_hl_(cpu: &mut CPU, memory_bus: &mut MemoryBus){
@@ -508,7 +508,7 @@ impl Control {
         // Half-carry occurs if low-nibble underflows when subtracting 1
         let h: bool = (register & 0x0F) == 0x00;
         cpu.get_registers().get_f_mut().set_flags(c,true, h,r == 0);
-        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 12);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 12);
     }
 
     pub fn ld_hl_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
@@ -516,19 +516,37 @@ impl Control {
         let register: u8 = memory_bus.read(offset_address);
         let hl: u16 = cpu.get_registers().get_hl();
         memory_bus.write(hl, register);
-        cpu.update_pc_and_cycles(cpu.get_pc() + 2, 12);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(2), 12);
     }
 
     pub fn scf(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(true,false,false,z);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
 
-    pub fn jr_c_e8(cpu: &mut CPU){
-
+    pub fn jr_c_e8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let offset_addr: u16 = cpu.get_pc().wrapping_add(1);
+        let c: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        if c {
+            let offset: i8 = memory_bus.read(offset_addr) as i8;
+            let new_pc: u16 = (cpu.get_pc() as i16).wrapping_add(2).wrapping_add(offset as i16) as u16;
+            cpu.update_pc_and_cycles(new_pc, 12);
+        } else {
+            cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(2), 8);
+        }
     }
 
     pub fn add_hl_sp(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let hl: u16 = cpu.get_registers().get_hl();
+        let sp: u16 = cpu.get_sp();
+        let r: u16 = hl.wrapping_add(sp);
+        cpu.get_registers().set_hl(r);
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        let h: bool = get_half_carry_inc_16b(hl, sp);
+        let c: bool = get_carry_inc_16b(hl, sp);
+        cpu.get_registers().get_f_mut().set_flags(c,false,h,z);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
     pub fn ld_a_hl_minus(cpu: &mut CPU){

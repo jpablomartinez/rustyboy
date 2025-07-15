@@ -46,3 +46,11 @@ pub fn get_msb_u8(value: u8) -> u8{
 pub fn get_half_carry_inc(value: u8) -> bool{
     (value & 0x0F) + 1 > 0xF
 }
+
+pub fn get_half_carry_inc_16b(value1: u16, value2: u16) -> bool{
+    ((value1 & 0x0FFF) + (value2 & 0x0FFF)) > 0x0FFF
+}
+
+pub fn get_carry_inc_16b(value1: u16, value2: u16) -> bool{
+    (value1 as u32 + value2 as u32) > 0xFFFF
+}

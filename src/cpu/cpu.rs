@@ -125,7 +125,7 @@ impl CPU {
             (0, 6, 5) => Control::dec_hl_(self, bus),
             (0, 6, 6) => Control::ld_hl_n8(self, bus),
             (0, 6, 7) => Control::scf(self),
-            (0, 7, 0) => Control::jr_c_e8(self),
+            (0, 7, 0) => Control::jr_c_e8(self, bus),
             (0, 7, 1) => Control::add_hl_sp(self),
             (0, 7, 2) => Control::ld_a_hl_minus(self),
             (0, 7, 3) => Control::dec_sp(self),
