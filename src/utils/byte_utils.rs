@@ -54,3 +54,7 @@ pub fn get_half_carry_inc_16b(value1: u16, value2: u16) -> bool{
 pub fn get_carry_inc_16b(value1: u16, value2: u16) -> bool{
     (value1 as u32 + value2 as u32) > 0xFFFF
 }
+
+pub fn get_half_carry_dec_8b(value: u8) -> bool {
+    (value & 0x0F) == 0x00
+}

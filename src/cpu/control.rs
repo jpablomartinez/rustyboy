@@ -2,7 +2,7 @@ use std::ptr::write_volatile;
 use crate::constants::flags::{C_FLAG, H_FLAG, N_FLAG, Z_FLAG};
 use crate::cpu::cpu::CPU;
 use crate::memory_bus::memory_bus::MemoryBus;
-use crate::utils::byte_utils::{format_u16, get_carry_inc_16b, get_half_carry_inc, get_half_carry_inc_16b, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8};
+use crate::utils::byte_utils::{format_u16, get_carry_inc_16b, get_half_carry_inc, get_half_carry_inc_16b, get_lsb_u16, get_lsb_u8, get_msb_u16, get_msb_u8, get_half_carry_dec_8b};
 
 pub struct Control;
 
@@ -549,28 +549,54 @@ impl Control {
         cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
-    pub fn ld_a_hl_minus(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_a_hl_minus(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let hl_address: u16 = cpu.get_registers().get_hl();
+        let value: u8 = memory_bus.read(hl_address);
+        cpu.get_registers().set_a(value);
+        let new_hl = hl_address.wrapping_sub(1);
+        cpu.get_registers().set_hl(new_hl);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
     pub fn dec_sp(cpu: &mut CPU){
-        cpu.add_cycles(8);
+        let sp: u16 = cpu.get_sp();
+        let r: u16 = sp.wrapping_sub(1);
+        cpu.set_sp(r);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
 
     pub fn inc_a(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let r: u8 = a.wrapping_add(1);
+        let half_carry: bool = get_half_carry_inc(a);
+        let carry: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(carry,false, half_carry,r == 0);
+        cpu.get_registers().set_a(r);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
 
     pub fn dec_a(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let a: u8 = cpu.get_registers().get_a();
+        let r: u8 = a.wrapping_sub(1);
+        let half_carry: bool = get_half_carry_dec_8b(a);
+        let carry: bool = cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(carry,true, half_carry,r == 0);
+        cpu.get_registers().set_a(r);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
 
-    pub fn ld_a_n8(cpu: &mut CPU){
-        cpu.add_cycles(8);
+    pub fn ld_a_n8(cpu: &mut CPU, memory_bus: &mut MemoryBus){
+        let addr: u16 = cpu.get_pc().wrapping_add(1);
+        let value: u8 = memory_bus.read(addr);
+        cpu.get_registers().set_a(value);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(2), 8);
     }
 
     pub fn ccf(cpu: &mut CPU){
-        cpu.add_cycles(4);
+        let z: bool = cpu.get_registers().get_f_mut().get_flag(Z_FLAG);
+        let carry: bool = !cpu.get_registers().get_f_mut().get_flag(C_FLAG);
+        cpu.get_registers().get_f_mut().set_flags(carry,false,false, z);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
 
 }
