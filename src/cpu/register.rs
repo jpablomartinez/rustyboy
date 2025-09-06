@@ -85,7 +85,7 @@ impl Register {
     pub fn set_c(&mut self, value: u8) {
         self.c = value;
     }
-    
+
     pub fn set_d(&mut self, value: u8) {
         self.d = value;
     }
