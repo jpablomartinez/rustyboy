@@ -135,17 +135,19 @@ impl CPU {
             (0, 7, 6) => LD::ld_a_n8(self, bus),
             (0, 7, 7) => Control::ccf(self),
 
-            /*(1, dst, src) if dst != 6 && src != 6 => {
-                
+            (1, dst, src) if dst != 6 && src != 6 => {
+                LD::ld_r8_r8(self, dst as usize, src as usize);
             }
             (1, 6, src) => {
-                
+                // LD (HL), r
+                LD::ld_hl_r(self, bus, src as usize)
             }
             (1, dst, 6) => {
-                
-            }*/
+                //LD r, (HL)
+                LD::ld_r_hl(self, bus, dst as usize)
+            }
             
-            (1, 0, 0) => LD::ld_r8_r8(self, Register::set_b, Register::get_b),
+            /*(1, 0, 0) => LD::ld_r8_r8(self, Register::set_b, Register::get_b),
             (1, 0, 1) => LD::ld_r8_r8(self, Register::set_b, Register::get_c),
             (1, 0, 2) => LD::ld_r8_r8(self, Register::set_b, Register::get_d),
             (1, 0, 3) => LD::ld_r8_r8(self, Register::set_b, Register::get_e),
@@ -211,7 +213,7 @@ impl CPU {
             (1, 7, 4) => LD::ld_r8_r8(self, Register::set_a, Register::get_h),
             (1, 7, 5) => LD::ld_r8_r8(self, Register::set_a, Register::get_l),
             (1, 7, 6) => todo!(),
-            (1, 7, 7) => LD::ld_r8_r8(self, Register::set_a, Register::get_a),
+            (1, 7, 7) => LD::ld_r8_r8(self, Register::set_a, Register::get_a),*/
             
             (2, 0, 0) => todo!(),
             (2, 0, 1) => todo!(),

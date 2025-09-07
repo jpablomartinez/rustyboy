@@ -6,6 +6,29 @@ use crate::utils::byte_utils::{format_u16, get_lsb_u16, get_msb_u16};
 
 pub struct LD;
 
+const SETTERS: [fn(&mut Register, u8); 8] = [
+    Register::set_b,
+    Register::set_c,
+    Register::set_d,
+    Register::set_e,
+    Register::set_h,
+    Register::set_l,
+    |_regs, _val|{},
+    Register::set_a,
+];
+
+const GETTERS: [fn(&Register) -> u8; 8] = [
+    Register::get_b,
+    Register::get_c,
+    Register::get_d,
+    Register::get_e,
+    Register::get_h,
+    Register::get_l,
+    |_regs| 0,
+    Register::get_a,
+];
+
+
 impl LD {
 
     pub fn ld_bc_n16(cpu: &mut CPU, memory_bus: &mut  MemoryBus) {
@@ -167,8 +190,33 @@ impl LD {
         cpu.get_registers().set_a(value);
         cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(2), 8);
     }
+    
+    pub fn ld_r8_r8(cpu: &mut CPU, dst: usize, src: usize) {
+        if dst == 6 || src == 6 {
+            todo!("Handle HL")
+            
+        } else {
+            let value = GETTERS[src](cpu.get_registers());
+            SETTERS[dst](cpu.get_registers(), value);
+            cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
+        }
+    }
+    
+    pub fn ld_r_hl(cpu: &mut CPU, memory_bus: &mut MemoryBus,  dst: usize){
+        let addr = cpu.get_registers().get_hl();
+        let value: u8 = memory_bus.read(addr);
+        SETTERS[dst](cpu.get_registers(), value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
+    }
+    
+    pub fn ld_hl_r(cpu: &mut CPU, memory_bus: &mut MemoryBus, src: usize){
+        let addr: u16 = cpu.get_registers().get_hl();
+        let value: u8 = GETTERS[src](cpu.get_registers());
+        memory_bus.write(addr, value);
+        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);    
+    }
 
-    pub fn ld_r8_r8(cpu: &mut CPU, setter: fn(&mut Register, u8), getter: fn(&Register) -> u8){
+    pub fn ld_r8_r8_(cpu: &mut CPU, setter: fn(&mut Register, u8), getter: fn(&Register) -> u8){
         let value = {
             let registers = cpu.get_registers();
             getter(registers)
