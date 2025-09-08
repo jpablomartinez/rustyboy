@@ -437,6 +437,11 @@ impl Control {
         cpu.get_registers().get_f_mut().set_flags(carry,false,false, z);
         cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
+    
+    pub fn halt(cpu: &mut CPU){
+        cpu.set_halt(true);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
+    }
 
 }
 

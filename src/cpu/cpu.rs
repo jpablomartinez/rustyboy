@@ -10,6 +10,10 @@ pub struct CPU {
     registers: Register,
     cycles: u64,
     is_running: bool,
+    ime: bool,
+    ie: bool,
+    _if: bool,
+    halt: bool,
 }
 
 impl CPU {
@@ -19,7 +23,11 @@ impl CPU {
             sp: 0x00,
             registers: Register::new(),
             cycles: 0,
-            is_running: true
+            is_running: true,
+            ime: false,
+            ie: false,
+            _if: false,
+            halt: false,
         }
     }
 
@@ -37,6 +45,8 @@ impl CPU {
     }
 
     pub fn get_sp(&self) -> u16 { self.sp }
+
+    pub fn get_halt(&self) -> bool { self.halt }
     
     pub fn get_registers(&mut self) -> &mut Register {
         &mut self.registers
@@ -48,6 +58,10 @@ impl CPU {
     
     pub fn set_sp(&mut self, new_sp: u16) {
         self.sp = new_sp;
+    }
+
+    pub fn set_halt(&mut self, value: bool) {
+        self.halt = value;
     }
 
     pub fn add_cycles(&mut self, c: u64){
@@ -138,82 +152,16 @@ impl CPU {
             (1, dst, src) if dst != 6 && src != 6 => {
                 LD::ld_r8_r8(self, dst as usize, src as usize);
             }
-            (1, 6, src) => {
-                // LD (HL), r
+            (1, 6, src) if src != 6 => {
                 LD::ld_hl_r(self, bus, src as usize)
             }
-            (1, dst, 6) => {
-                //LD r, (HL)
+            (1, dst, 6) if dst != 6 => {
                 LD::ld_r_hl(self, bus, dst as usize)
             }
-            
-            /*(1, 0, 0) => LD::ld_r8_r8(self, Register::set_b, Register::get_b),
-            (1, 0, 1) => LD::ld_r8_r8(self, Register::set_b, Register::get_c),
-            (1, 0, 2) => LD::ld_r8_r8(self, Register::set_b, Register::get_d),
-            (1, 0, 3) => LD::ld_r8_r8(self, Register::set_b, Register::get_e),
-            (1, 0, 4) => LD::ld_r8_r8(self, Register::set_b, Register::get_h),
-            (1, 0, 5) => LD::ld_r8_r8(self, Register::set_b, Register::get_l),
-            (1, 0, 6) => todo!(),
-            (1, 0, 7) => LD::ld_r8_r8(self, Register::set_b, Register::get_a),
-            (1, 1, 0) => LD::ld_r8_r8(self, Register::set_c, Register::get_b),
-            (1, 1, 1) => LD::ld_r8_r8(self, Register::set_c, Register::get_c),
-            (1, 1, 2) => LD::ld_r8_r8(self, Register::set_c, Register::get_d),
-            (1, 1, 3) => LD::ld_r8_r8(self, Register::set_c, Register::get_e),
-            (1, 1, 4) => LD::ld_r8_r8(self, Register::set_c, Register::get_h),
-            (1, 1, 5) => LD::ld_r8_r8(self, Register::set_c, Register::get_l),
-            (1, 1, 6) => todo!(),
-            (1, 1, 7) => LD::ld_r8_r8(self, Register::set_c, Register::get_a),
-            
-            (1, 2, 0) => LD::ld_r8_r8(self, Register::set_d, Register::get_b),
-            (1, 2, 1) => LD::ld_r8_r8(self, Register::set_d, Register::get_c),
-            (1, 2, 2) => LD::ld_r8_r8(self, Register::set_d, Register::get_d),
-            (1, 2, 3) => LD::ld_r8_r8(self, Register::set_d, Register::get_e),
-            (1, 2, 4) => LD::ld_r8_r8(self, Register::set_d, Register::get_h),
-            (1, 2, 5) => LD::ld_r8_r8(self, Register::set_d, Register::get_l),
-            (1, 2, 6) => todo!(),
-            (1, 2, 7) => LD::ld_r8_r8(self, Register::set_d, Register::get_a),
-            (1, 3, 0) => LD::ld_r8_r8(self, Register::set_e, Register::get_b),
-            (1, 3, 1) => LD::ld_r8_r8(self, Register::set_e, Register::get_c),
-            (1, 3, 2) => LD::ld_r8_r8(self, Register::set_e, Register::get_d),
-            (1, 3, 3) => LD::ld_r8_r8(self, Register::set_e, Register::get_e),
-            (1, 3, 4) => LD::ld_r8_r8(self, Register::set_e, Register::get_h),
-            (1, 3, 5) => LD::ld_r8_r8(self, Register::set_e, Register::get_l),
-            (1, 3, 6) => todo!(),
-            (1, 3, 7) => LD::ld_r8_r8(self, Register::set_e, Register::get_a),
-            
-            (1, 4, 0) => LD::ld_r8_r8(self, Register::set_h, Register::get_b),
-            (1, 4, 1) => LD::ld_r8_r8(self, Register::set_h, Register::get_c),
-            (1, 4, 2) => LD::ld_r8_r8(self, Register::set_h, Register::get_d),
-            (1, 4, 3) => LD::ld_r8_r8(self, Register::set_h, Register::get_e),
-            (1, 4, 4) => LD::ld_r8_r8(self, Register::set_h, Register::get_h),
-            (1, 4, 5) => LD::ld_r8_r8(self, Register::set_h, Register::get_l),
-            (1, 4, 6) => todo!(),
-            (1, 4, 7) => LD::ld_r8_r8(self, Register::set_h, Register::get_a),
-            (1, 5, 0) => LD::ld_r8_r8(self, Register::set_l, Register::get_b),
-            (1, 5, 1) => LD::ld_r8_r8(self, Register::set_l, Register::get_c),
-            (1, 5, 2) => LD::ld_r8_r8(self, Register::set_l, Register::get_d),
-            (1, 5, 3) => LD::ld_r8_r8(self, Register::set_l, Register::get_e),
-            (1, 5, 4) => LD::ld_r8_r8(self, Register::set_l, Register::get_h),
-            (1, 5, 5) => LD::ld_r8_r8(self, Register::set_l, Register::get_l),
-            (1, 5, 6) => todo!(),
-            (1, 5, 7) => LD::ld_r8_r8(self, Register::set_l, Register::get_a),
-            
-            (1, 6, 0) => todo!(),
-            (1, 6, 1) => todo!(),
-            (1, 6, 2) => todo!(),
-            (1, 6, 3) => todo!(),
-            (1, 6, 4) => todo!(),
-            (1, 6, 5) => todo!(),
-            (1, 6, 6) => todo!(),
-            (1, 6, 7) => todo!(),
-            (1, 7, 0) => LD::ld_r8_r8(self, Register::set_a, Register::get_b),
-            (1, 7, 1) => LD::ld_r8_r8(self, Register::set_a, Register::get_c),
-            (1, 7, 2) => LD::ld_r8_r8(self, Register::set_a, Register::get_d),
-            (1, 7, 3) => LD::ld_r8_r8(self, Register::set_a, Register::get_e),
-            (1, 7, 4) => LD::ld_r8_r8(self, Register::set_a, Register::get_h),
-            (1, 7, 5) => LD::ld_r8_r8(self, Register::set_a, Register::get_l),
-            (1, 7, 6) => todo!(),
-            (1, 7, 7) => LD::ld_r8_r8(self, Register::set_a, Register::get_a),*/
+
+            (1, 6, 6) => {
+                Control::halt(self)
+            }
             
             (2, 0, 0) => todo!(),
             (2, 0, 1) => todo!(),

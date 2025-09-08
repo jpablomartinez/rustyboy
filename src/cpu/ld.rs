@@ -192,28 +192,23 @@ impl LD {
     }
     
     pub fn ld_r8_r8(cpu: &mut CPU, dst: usize, src: usize) {
-        if dst == 6 || src == 6 {
-            todo!("Handle HL")
-            
-        } else {
-            let value = GETTERS[src](cpu.get_registers());
-            SETTERS[dst](cpu.get_registers(), value);
-            cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
-        }
+        let value = GETTERS[src](cpu.get_registers());
+        SETTERS[dst](cpu.get_registers(), value);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
     
     pub fn ld_r_hl(cpu: &mut CPU, memory_bus: &mut MemoryBus,  dst: usize){
         let addr = cpu.get_registers().get_hl();
         let value: u8 = memory_bus.read(addr);
         SETTERS[dst](cpu.get_registers(), value);
-        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);
     }
     
     pub fn ld_hl_r(cpu: &mut CPU, memory_bus: &mut MemoryBus, src: usize){
         let addr: u16 = cpu.get_registers().get_hl();
         let value: u8 = GETTERS[src](cpu.get_registers());
         memory_bus.write(addr, value);
-        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 8);    
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 8);    
     }
 
     pub fn ld_r8_r8_(cpu: &mut CPU, setter: fn(&mut Register, u8), getter: fn(&Register) -> u8){
@@ -223,6 +218,6 @@ impl LD {
         };
         let registers = cpu.get_registers();
         setter(registers, value);
-        cpu.update_pc_and_cycles(cpu.get_pc() + 1, 4);
+        cpu.update_pc_and_cycles(cpu.get_pc().wrapping_add(1), 4);
     }
 }
